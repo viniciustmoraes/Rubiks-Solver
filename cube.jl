@@ -1,6 +1,7 @@
+using LinearAlgebra
 
 # Defines the solved cube configuration
-function solved_color_state()
+function solved_cube()
     tmp = ones(Int, 6, 3, 3)
     for i in 1:6
         tmp[i, :, :] = i * ones(Int, 3, 3)
@@ -17,6 +18,8 @@ face_connections = [
     Dict("N" => 1, "S" => 3, "W" => 4, "E" => 2, "O" => 6) # 5
     Dict("N" => 3, "S" => 1, "W" => 4, "E" => 2, "O" => 5) # 6
 ]
+
+direction_vectors = Dict("N" => [0, 1, 0], "S" => [0, -1, 0], "W" => [-1, 0, 0], "E" => [1, 0, 0])
 
 mutable struct Cube
     color_state::Array{Int,3}
@@ -47,9 +50,25 @@ function matrix_rotation(input_matrix::Matrix, direction::Bool)
     return ans
 end
 
-x = ["a" "b" "c"; "d" "e" "f"; "g" "h" "i"]
-y = matrix_rotation(x, true)
-z = matrix_rotation(x, false)
-println("x", x)
-println("y", y)
-println("z", z)
+"""
+Performs a simple line transformation on the cube. A face must be specified, from 1 to 6, and a line and direction 
+must be given as N, S, E, or W, according to the desired transformation
+"""
+function line_rotation!(cube, face::Int, line::String, direction::String)
+    # Rotates the face neighbor to the line that is moved
+    rotaded_face = face_connections[face][line]
+    rotation_direction = sign(cross(direction_vectors[direction], direction_vectors[line])[end]) > 0
+    cube[rotaded_face, :, :] = matrix_rotation(cube[rotaded_face, :, :], rotation_direction)
+
+end
+
+
+#### Testing
+
+cube = solved_cube()
+cube[6, :, :] = [1 2 3; 4 5 6; 7 8 9]
+println(cube[6, :, :])
+
+line_rotation!(cube, 1, "N", "W")
+println(cube[6, :, :])
+
